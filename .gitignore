@@ -1,2 +1,6 @@
 .DS_Store
-.onnx
+*.onnx
+__pycache__/
+.vscode/
+inputs/
+outputs/

@@ -44,22 +44,34 @@ import six
 import tokenization
 
 
-RawResult = collections.namedtuple("RawResult", ["unique_id", "start_logits", "end_logits"])
+RawResult = collections.namedtuple(
+    "RawResult", ["unique_id", "start_logits", "end_logits"]
+)
 
-Feature = collections.namedtuple("Feature", ["unique_id", "tokens", "example_index",
-                                             "token_to_orig_map", "token_is_max_context"])
+Feature = collections.namedtuple(
+    "Feature",
+    [
+        "unique_id",
+        "tokens",
+        "example_index",
+        "token_to_orig_map",
+        "token_is_max_context",
+    ],
+)
 
 
 class SquadExample(object):
     """A single training/test example for simple sequence classification."""
 
-    def __init__(self,
-                 qas_id,
-                 question_text,
-                 doc_tokens,
-                 orig_answer_text=None,
-                 start_position=None,
-                 end_position=None):
+    def __init__(
+        self,
+        qas_id,
+        question_text,
+        doc_tokens,
+        orig_answer_text=None,
+        start_position=None,
+        end_position=None,
+    ):
         self.qas_id = qas_id
         self.question_text = question_text
         self.doc_tokens = doc_tokens
@@ -73,7 +85,9 @@ class SquadExample(object):
     def __repr__(self):
         s = []
         s.append("qas_id: %s" % (tokenization.printable_text(self.qas_id)))
-        s.append("question_text: %s" % (tokenization.printable_text(self.question_text)))
+        s.append(
+            "question_text: %s" % (tokenization.printable_text(self.question_text))
+        )
         s.append("doc_tokens: [%s]" % (" ".join(self.doc_tokens)))
         if self.start_position:
             s.append("start_position: %d" % (self.start_position))
@@ -119,7 +133,9 @@ def _check_is_max_context(doc_spans, cur_span_index, position):
     return cur_span_index == best_span_index
 
 
-def convert_examples_to_features(examples, tokenizer, max_seq_length, doc_stride, max_query_length):
+def convert_examples_to_features(
+    examples, tokenizer, max_seq_length, doc_stride, max_query_length
+):
     """Loads a data file into a list of `InputBatch`s."""
 
     res_input_ids = []
@@ -181,8 +197,9 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length, doc_stride
                 split_token_index = doc_span.start + i
                 token_to_orig_map[len(tokens)] = tok_to_orig_index[split_token_index]
 
-                is_max_context = _check_is_max_context(doc_spans, doc_span_index,
-                                                       split_token_index)
+                is_max_context = _check_is_max_context(
+                    doc_spans, doc_span_index, split_token_index
+                )
                 token_is_max_context[len(tokens)] = is_max_context
                 tokens.append(all_doc_tokens[split_token_index])
                 segment_ids.append(1)
@@ -203,12 +220,21 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length, doc_stride
             res_input_ids.append(np.array(input_ids, dtype=np.int64))
             res_input_mask.append(np.array(input_mask, dtype=np.int64))
             res_segment_ids.append(np.array(segment_ids, dtype=np.int64))
-            feature = Feature(unique_id=unique_id, tokens=tokens,
-                              example_index=example_index, token_to_orig_map=token_to_orig_map,
-                              token_is_max_context=token_is_max_context)
+            feature = Feature(
+                unique_id=unique_id,
+                tokens=tokens,
+                example_index=example_index,
+                token_to_orig_map=token_to_orig_map,
+                token_is_max_context=token_is_max_context,
+            )
             extra.append(feature)
             unique_id += 1
-    return np.array(res_input_ids), np.array(res_input_mask), np.array(res_segment_ids), extra
+    return (
+        np.array(res_input_ids),
+        np.array(res_input_mask),
+        np.array(res_segment_ids),
+        extra,
+    )
 
 
 def read_squad_examples(input_file):
@@ -251,14 +277,21 @@ def read_squad_examples(input_file):
                     doc_tokens=doc_tokens,
                     orig_answer_text=orig_answer_text,
                     start_position=start_position,
-                    end_position=end_position)
+                    end_position=end_position,
+                )
                 examples.append(example)
     return examples
 
 
-def write_predictions(all_examples, all_features, all_results, n_best_size,
-                      max_answer_length, do_lower_case, output_prediction_file,
-                      output_nbest_file):
+def write_predictions(
+    all_examples,
+    all_features,
+    all_results,
+    n_best_size,
+    max_answer_length,
+    do_lower_case,
+    output_prediction_file,
+):
     """Write final predictions to the json file."""
     example_index_to_features = collections.defaultdict(list)
     for feature in all_features:
@@ -270,7 +303,8 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
 
     _PrelimPrediction = collections.namedtuple(  # pylint: disable=invalid-name
         "PrelimPrediction",
-        ["feature_index", "start_index", "end_index", "start_logit", "end_logit"])
+        ["feature_index", "start_index", "end_index", "start_logit", "end_logit"],
+    )
 
     all_predictions = collections.OrderedDict()
     all_nbest_json = collections.OrderedDict()
@@ -311,15 +345,19 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
                             start_index=start_index,
                             end_index=end_index,
                             start_logit=result.start_logits[start_index],
-                            end_logit=result.end_logits[end_index]))
+                            end_logit=result.end_logits[end_index],
+                        )
+                    )
 
         prelim_predictions = sorted(
             prelim_predictions,
             key=lambda x: (x.start_logit + x.end_logit),
-            reverse=True)
+            reverse=True,
+        )
 
         _NbestPrediction = collections.namedtuple(  # pylint: disable=invalid-name
-            "NbestPrediction", ["text", "start_logit", "end_logit"])
+            "NbestPrediction", ["text", "start_logit", "end_logit"]
+        )
 
         seen_predictions = {}
         nbest = []
@@ -328,10 +366,10 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
                 break
             feature = features[pred.feature_index]
 
-            tok_tokens = feature.tokens[pred.start_index:(pred.end_index + 1)]
+            tok_tokens = feature.tokens[pred.start_index : (pred.end_index + 1)]
             orig_doc_start = feature.token_to_orig_map[pred.start_index]
             orig_doc_end = feature.token_to_orig_map[pred.end_index]
-            orig_tokens = example.doc_tokens[orig_doc_start:(orig_doc_end + 1)]
+            orig_tokens = example.doc_tokens[orig_doc_start : (orig_doc_end + 1)]
             tok_text = " ".join(tok_tokens)
 
             # De-tokenize WordPieces that have been split off.
@@ -352,13 +390,14 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
                 _NbestPrediction(
                     text=final_text,
                     start_logit=pred.start_logit,
-                    end_logit=pred.end_logit))
+                    end_logit=pred.end_logit,
+                )
+            )
 
         # In very rare edge cases we could have no valid predictions. So we
         # just create a nonce prediction in this case to avoid failure.
         if not nbest:
-            nbest.append(
-                _NbestPrediction(text="empty", start_logit=0.0, end_logit=0.0))
+            nbest.append(_NbestPrediction(text="empty", start_logit=0.0, end_logit=0.0))
 
         assert len(nbest) >= 1
 
@@ -382,9 +421,6 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
 
     with open(output_prediction_file, "w") as writer:
         writer.write(json.dumps(all_predictions, indent=4) + "\n")
-
-    with open(output_nbest_file, "w") as writer:
-        writer.write(json.dumps(all_nbest_json, indent=4) + "\n")
 
 
 def get_final_text(pred_text, orig_text, do_lower_case):
@@ -469,7 +505,7 @@ def get_final_text(pred_text, orig_text, do_lower_case):
     if orig_end_position is None:
         return orig_text
 
-    output_text = orig_text[orig_start_position:(orig_end_position + 1)]
+    output_text = orig_text[orig_start_position : (orig_end_position + 1)]
     return output_text
 
 
@@ -505,79 +541,3 @@ def _compute_softmax(scores):
     for score in exp_scores:
         probs.append(score / total_sum)
     return probs
-
-
-def main():
-    parser = argparse.ArgumentParser(description='onnx squad')
-    parser.add_argument('--model', required=True, help='model')
-    parser.add_argument('--vocab_file', required=True, help='vocab_file')
-    parser.add_argument('--bert_config_file', help='vocab_file')
-    parser.add_argument('--predict_file', required=True, help='predict_file')
-    parser.add_argument('--output_dir', help='output dir')
-    parser.add_argument('--max_seq_length', type=int, default=256, help='max_seq_length')
-    parser.add_argument('--max_query_length', type=int, default=64, help='max_query_length')
-    parser.add_argument('--max_answer_length', type=int, default=30, help='max_answer_length')
-    parser.add_argument('--n_best_size', type=int, default=20, help='n_best_size')
-    parser.add_argument('--doc_stride', type=int, default=128, help='doc_stride')
-    parser.add_argument('--batch_size', type=int, default=1, help='batch_size')
-    parser.add_argument('--profile', action='store_true', help='enable chrome timeline trace profiling.')
-    parser.add_argument('--log', type=int, help='log level.')
-    args = parser.parse_args()
-
-    sess_options = None
-    if args.profile:
-        sess_options = onnxrt.SessionOptions()
-        sess_options.enable_profiling = True
-        sess_options.profile_file_prefix = os.path.basename(args.model)
-    if args.log:
-        sess_options = onnxrt.SessionOptions()
-        sess_options.session_log_verbosity_level = args.log
-
-    tokenizer = tokenization.FullTokenizer(vocab_file=args.vocab_file, do_lower_case=True)
-
-    eval_examples = read_squad_examples(input_file=args.predict_file)
-    input_ids, input_mask, segment_ids, extra_data = \
-        convert_examples_to_features(eval_examples, tokenizer, args.max_seq_length,
-                                     args.doc_stride, args.max_query_length)
-
-    # Start from ORT 1.10, ORT requires explicitly setting the providers parameter if you want to use execution providers
-    # other than the default CPU provider (as opposed to the previous behavior of providers getting set/registered by default
-    # based on the build flags) when instantiating InferenceSession.
-    # For example, if NVIDIA GPU is available and ORT Python package is built with CUDA, then call API as following:
-    # onnxrt.InferenceSession(path/to/model, providers=['CUDAExecutionProvider'])
-    sess = onnxrt.InferenceSession(args.model, sess_options)
-    for input_meta in sess.get_inputs():
-        print(input_meta)
-    n = len(input_ids)
-    bs = args.batch_size
-    all_results = []
-    start = timer()
-    for idx in range(0, n, bs):
-        data = {"input_ids:0": input_ids[idx:idx + bs],
-                "input_mask:0": input_mask[idx:idx + bs],
-                "segment_ids:0": segment_ids[idx:idx + bs]}
-        result = sess.run(["unstack:0", "unstack:1"], data)
-        in_batch = result[0].shape[1]
-        for i in range(0, in_batch):
-            unique_id = len(all_results)
-            all_results.append(RawResult(unique_id=unique_id, start_logits=result[0][0][i], end_logits=result[1][0][i]))
-            if unique_id > 0 and unique_id % 100 == 0:
-                print("at {} {}sec per item".format(unique_id, (timer() - start) / unique_id))
-    end = timer()
-
-    print("total time: {}sec, {}sec per item".format(end - start, (end - start) / len(all_results)))
-
-    if args.output_dir:
-        output_prediction_file = os.path.join(args.output_dir, "predictions.json")
-        output_nbest_file = os.path.join(args.output_dir, "nbest_predictions.json")
-        write_predictions(eval_examples, extra_data, all_results,
-                          args.n_best_size, args.max_answer_length,
-                          True, output_prediction_file, output_nbest_file)
-    if args.profile:
-        trace_file = sess.end_profiling()
-        print("trace file written to: {}".format(trace_file))
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
