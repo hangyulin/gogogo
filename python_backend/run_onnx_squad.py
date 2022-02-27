@@ -240,7 +240,7 @@ def convert_examples_to_features(
 def read_squad_examples(input_file):
     """Read a SQuAD json file into a list of SquadExample."""
     with open(input_file, "r") as f:
-        input_data = json.load(f)["data"]
+        input_data = json.load(f)
 
     def is_whitespace(c):
         if c == " " or c == "\t" or c == "\r" or c == "\n" or ord(c) == 0x202F:
@@ -248,38 +248,36 @@ def read_squad_examples(input_file):
         return False
 
     examples = []
-    for idx, entry in enumerate(input_data):
-        for paragraph in entry["paragraphs"]:
-            paragraph_text = paragraph["context"]
-            doc_tokens = []
-            char_to_word_offset = []
-            prev_is_whitespace = True
-            for c in paragraph_text:
-                if is_whitespace(c):
-                    prev_is_whitespace = True
-                else:
-                    if prev_is_whitespace:
-                        doc_tokens.append(c)
-                    else:
-                        doc_tokens[-1] += c
-                    prev_is_whitespace = False
-                char_to_word_offset.append(len(doc_tokens) - 1)
 
-            for qa in paragraph["qas"]:
-                qas_id = qa["id"]
-                question_text = qa["question"]
-                start_position = None
-                end_position = None
-                orig_answer_text = None
-                example = SquadExample(
-                    qas_id=qas_id,
-                    question_text=question_text,
-                    doc_tokens=doc_tokens,
-                    orig_answer_text=orig_answer_text,
-                    start_position=start_position,
-                    end_position=end_position,
-                )
-                examples.append(example)
+    paragraph_text = input_data["context"]
+    doc_tokens = []
+    char_to_word_offset = []
+    prev_is_whitespace = True
+    for c in paragraph_text:
+        if is_whitespace(c):
+            prev_is_whitespace = True
+        else:
+            if prev_is_whitespace:
+                doc_tokens.append(c)
+            else:
+                doc_tokens[-1] += c
+            prev_is_whitespace = False
+        char_to_word_offset.append(len(doc_tokens) - 1)
+
+    qas_id = 1
+    question_text = input_data["question"]
+    start_position = None
+    end_position = None
+    orig_answer_text = None
+    example = SquadExample(
+        qas_id=qas_id,
+        question_text=question_text,
+        doc_tokens=doc_tokens,
+        orig_answer_text=orig_answer_text,
+        start_position=start_position,
+        end_position=end_position,
+    )
+    examples.append(example)
     return examples
 
 

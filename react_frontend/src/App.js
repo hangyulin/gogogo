@@ -1,15 +1,16 @@
-import logo from './logo.svg';
-import './App.css';
+import * as React from "react";
+import "./App.css";
+import { Container } from "@mui/material";
+import Button from "@mui/material/Button";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Website gogogo
-        </p>
-      </header>
+    <div>
+      <Container>
+        <Button variant="text" href="/text-question-and-answer">
+          Text Question and Answer Feature
+        </Button>
+      </Container>
     </div>
   );
 }

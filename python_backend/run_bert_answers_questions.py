@@ -13,9 +13,10 @@ MAX_QUERY_LENGTH = 64
 BATCH_SIZE = 1
 N_BEST_SIZE = 20
 MAX_ANSWER_LENGTH = 30
-VOCAB_FILE = "vocab.txt"
-INPUT_DIR = "inputs"
-OUTPUT_DIR = "outputs"
+BERT_SQUAD_12_ONNX_FILE = "/home/ubuntu/gogogo/python_backend/bertsquad-12.onnx"
+VOCAB_FILE = "/home/ubuntu/gogogo/python_backend/vocab.txt"
+INPUT_DIR = "/home/ubuntu/server_inputs"
+OUTPUT_DIR = "/home/ubuntu/server_outputs"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -48,7 +49,7 @@ if __name__ == "__main__":
         eval_examples, tokenizer, MAX_SEQ_LENGTH, DOC_STRIDE, MAX_QUERY_LENGTH
     )
 
-    session = ort.InferenceSession("bertsquad-12.onnx")
+    session = ort.InferenceSession(BERT_SQUAD_12_ONNX_FILE)
     n = len(input_ids)
     bs = BATCH_SIZE
     all_results = []
