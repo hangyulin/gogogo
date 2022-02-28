@@ -2,11 +2,13 @@ package router
 
 import (
 	"github.com/gorilla/mux"
+	"go_server/middleware"
 )
 
-// Router is exported and used in main.go
 func Router() *mux.Router {
 
 	router := mux.NewRouter()
+	router.HandleFunc("/api/qna", middleware.GetQuestionAndAnswerResult).Methods("POST")
+
 	return router
 }

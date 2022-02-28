@@ -50,11 +50,11 @@ if __name__ == "__main__":
     )
 
     session = ort.InferenceSession(BERT_SQUAD_12_ONNX_FILE)
-    n = len(input_ids)
+    n = len(eval_examples)
     bs = BATCH_SIZE
     all_results = []
     for idx in range(0, n):
-        item = eval_examples[idx]
+        item = eval_examples[0]
         # this is using batch_size=1
         # feed the input data as int64
         data = {

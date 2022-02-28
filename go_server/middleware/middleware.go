@@ -1,18 +1,14 @@
 package middleware
-package main
 
 import (
-	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"fmt" 
-	"github.com/gorilla/mux"
 	"os"
 	"io/ioutil"
 	"bytes"
 	"os/exec"
-	"time"
+	"hash/fnv"
 )
 
 type QuestionAndAnswer struct {
@@ -23,26 +19,27 @@ type QuestionAndAnswer struct {
 func init() {
 }
 
-func GetQuestionAndAnswerResult(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	params := mux.Vars(r)
+func hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
+}
 
-	currentTime := time.Now()
-	filename = currentTime.Format("2006-01-02T15:04:05") + ".json"
-	saveQuestionAndAnswerQuestion(filename, params["inputContext"], params["inputQuestion"])
-	payload := getQuestionAndAnswerResult(filename)
+func GetQuestionAndAnswerResult(w http.ResponseWriter, r *http.Request) {
+	var data QuestionAndAnswer
+	err := json.NewDecoder(r.Body).Decode(&data)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+	
+	filename := fmt.Sprint(hash(data.Context + data.Question)) + ".json"
+	saveQuestionAndAnswerQuestion(filename, data)
+	payload := runAndGetQuestionAndAnswerResult(filename)
 	json.NewEncoder(w).Encode(payload)
 }
 
-func saveQuestionAndAnswerQuestion(filename string, inputContext string, inputQuestion string) {
-	data := &QuestionAndAnswer{
-		Context: inputContext,
-		Question: inputQuestion,
-	}
-
+func saveQuestionAndAnswerQuestion(filename string, data QuestionAndAnswer) {
 	buf, err1 := json.Marshal(data)
 	if err1 !=nil {
 		panic(err1)
